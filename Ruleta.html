@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡RULETA SUBDIRECCIÓN DE CONTADURÍA!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #1a252f;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--dark-color) 100%);
+            margin: 0;
+            padding: 20px;
+            color: var(--light-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            font-size: 2.5rem;
+        }
+
+        /* Contenedor principal para la ruleta y los controles */
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        /* Contenedor de la ruleta */
+        .roulette-container {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 500px;
+            max-height: 500px;
+            margin: 20px auto;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        
+        /* Puntero triangular en la parte superior */
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 40px solid var(--accent-color);
+            z-index: 20;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        }
+
+        /* Botón central para girar */
+        .spin-trigger {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20%;
+            height: 20%;
+            background: radial-gradient(circle, #ffffff 0%, #d1d1d1 100%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            border: 5px solid #fff;
+            color: var(--primary-color);
+            box-shadow: 0 0 0 5px var(--primary-color), 0 5px 10px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .spin-trigger:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 0 7px var(--primary-color), 0 8px 15px rgba(0,0,0,0.5);
+        }
+        
+        .spin-trigger:active {
+            transform: translate(-50%, -50%) scale(1.0);
+        }
+        
+        /* Panel de controles para las opciones */
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .controls-panel h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        #optionsInput {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 2px solid var(--secondary-color);
+            background: var(--light-color);
+            color: var(--primary-color);
+            padding: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease;
+            flex-grow: 1;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: var(--accent-color);
+        }
+        
+        /* Modal para mostrar al ganador */
+        .winner-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .winner-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .winner-content {
+            background: #fff;
+            color: var(--primary-color);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .winner-modal.show .winner-content {
+            transform: scale(1);
+        }
+        
+        .winner-content h2 {
+            margin: 0 0 10px 0;
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+        }
+        
+        #winnerName {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        #closeModalBtn {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>¡RULETA SUBDIRECCIÓN DE CONTADURÍA!</h1>
+    
+    <div class="main-container">
+        <div class="roulette-container">
+            <div class="pointer"></div>
+            <canvas id="roulette" width="500" height="500"></canvas>
+            <div class="spin-trigger" id="spinBtn">Girar</div>
+        </div>
+
+        <div class="controls-panel">
+            <h2>PARTICIPANTES</h2>
+            <textarea id="optionsInput" rows="8">Ana
+Beatriz
+Carlos
+David
+Eva
+Fernando
+Gloria
+Hugo
+Inés
+Jorge</textarea>
+            <div class="button-group">
+                <button id="updateBtn" class="btn">Actualizar Ruleta</button>
+                <button id="clearBtn" class="btn btn-clear">Limpiar Opciones</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="winner-modal" id="winnerModal">
+        <div class="winner-content">
+            <h2>🎉 ¡Ganador! 🎉</h2>
+            <p id="winnerName"></p>
+            <button id="closeModalBtn" class="btn">Cerrar</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById("roulette");
+    const ctx = canvas.getContext("2d");
+    const optionsInput = document.getElementById("optionsInput");
+    const spinBtn = document.getElementById("spinBtn");
+    const updateBtn = document.getElementById("updateBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const winnerModal = document.getElementById("winnerModal");
+    const winnerNameEl = document.getElementById("winnerName");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+
+    let options = [];
+    let startAngle = 0;
+    let arc = 0;
+    let spinTimeout = null;
+    let spinAngleStart = 0;
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+    let spinning = false;
+
+    // Paleta de colores más vibrante
+    const colors = [
+        "#3498db", "#e74c3c", "#2ecc71", "#f1c40f", "#9b59b6",
+        "#1abc9c", "#e67e22", "#34495e", "#d35400", "#c0392b"
+    ];
+
+    // Función para dibujar la ruleta
+    function drawRoulette() {
+        if (!canvas.getContext) return;
+        arc = Math.PI / (options.length / 2);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+
+        for (let i = 0; i < options.length; i++) {
+            const angle = startAngle + i * arc;
+            ctx.fillStyle = colors[i % colors.length];
+
+            ctx.beginPath();
+            ctx.arc(250, 250, 250, angle, angle + arc, false);
+            ctx.arc(250, 250, 0, angle + arc, angle, true);
+            ctx.stroke();
+            ctx.fill();
+
+            // Dibuja el texto saliendo desde el centro
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = "bold 16px Poppins";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            
+            // Mueve el origen al centro y rota el canvas
+            ctx.translate(250, 250);
+            ctx.rotate(angle + arc / 2);
+            
+            const text = options[i];
+            // Dibuja el texto a lo largo del radio
+            ctx.fillText(text, 30, 0);
+            ctx.restore();
+        }
+    }
+    
+    // Nueva función para una animación de giro más suave (ease-out)
+    function easeOut(t, b, c, d) {
+        const ts = (t /= d) * t;
+        const tc = ts * t;
+        return b + c * (tc + -3 * ts + 3 * t);
+    }
+
+    function rotate() {
+        spinTime += 30;
+        if (spinTime >= spinTimeTotal) {
+            stopRotate();
+            return;
+        }
+        const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+        startAngle += (spinAngle * Math.PI / 180);
+        drawRoulette();
+        spinTimeout = setTimeout(rotate, 30);
+    }
+    
+    function spin() {
+        if (spinning) return;
+        
+        spinning = true;
+        spinAngleStart = Math.random() * 10 + 10;
+        spinTime = 0;
+        // La duración es de 5 segundos (5000 ms)
+        spinTimeTotal = 5000;
+        
+        rotate();
+    }
+    
+    function stopRotate() {
+        clearTimeout(spinTimeout);
+        const degrees = startAngle * 180 / Math.PI + 90;
+        const arcd = arc * 180 / Math.PI;
+        const index = Math.floor((360 - degrees % 360) / arcd);
+        
+        const winner = options[index];
+        winnerNameEl.innerText = winner;
+        winnerModal.classList.add('show');
+        spinning = false;
+    }
+
+    function updateOptions() {
+        const opts = optionsInput.value.split("\n").map(o => o.trim()).filter(Boolean);
+        if (opts.length > 0) {
+            options = opts;
+            drawRoulette();
+        } else {
+            // Si no hay opciones, limpia el canvas
+            options = [];
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+        }
+    }
+    
+    function clearOptions() {
+        optionsInput.value = "";
+        updateOptions();
+    }
+
+    // Event Listeners para una mejor práctica
+    spinBtn.addEventListener("click", spin);
+    updateBtn.addEventListener("click", updateOptions);
+    clearBtn.addEventListener("click", clearOptions);
+    closeModalBtn.addEventListener("click", () => winnerModal.classList.remove('show'));
+    winnerModal.addEventListener("click", (e) => {
+        if (e.target === winnerModal) {
+            winnerModal.classList.remove('show');
+        }
+    });
+
+    // Carga inicial
+    updateOptions();
+
+</script>
+
+</body>
+</html>
